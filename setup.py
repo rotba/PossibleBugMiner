@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 from settings import CURRENT_PROJ_NAME
 
-install_requires = ['GitPython','jira']
+install_requires = ['GitPython','jira', 'AIDnD_Diff']
 
 
 

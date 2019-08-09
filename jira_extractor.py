@@ -2,6 +2,7 @@ import logging
 import os
 from urlparse import urlparse
 
+from commit_analyzer import IsBugCommitAnalyzer
 from jira import JIRA
 from jira import exceptions as jira_exceptions
 
@@ -11,12 +12,15 @@ from utils import is_test_file
 
 class JiraExtractor(Extractor):
 	MAX_ISSUES_TO_RETRIEVE = 2000
+	# USE_CASH = False
 
-	def __init__(self, repo, branch_inspected, jira_url, issue_key=None):
-		super(JiraExtractor, self).__init__(repo, branch_inspected)
+	# def __init__(self, repo_dir, branch_inspected, jira_url, issue_key=None, query = None, use_cash = False):
+	def __init__(self, repo_dir, branch_inspected, jira_url, issue_key=None, query=None):
+		super(JiraExtractor, self).__init__(repo_dir, branch_inspected)
 		self.jira_url = urlparse(jira_url)
 		self.jira_proj_name = os.path.basename(self.jira_url.path)
 		self.issue_key = issue_key
+		self.query = query if query != None else self.generate_jql_find_bugs()
 		self.jira = JIRA(options={'server': 'https://issues.apache.org/jira'})
 
 	# Returns tupls of (issue,commit,tests) that may contain bugs
@@ -29,12 +33,13 @@ class JiraExtractor(Extractor):
 				logging.info('Couldn\'t find commits associated with ' + bug_issue.key)
 				continue
 			for commit in issue_commits:
-				issue_tests = self.get_tests_paths_from_commit(commit)
-				if len(issue_tests) == 0:
+				analyzer = IsBugCommitAnalyzer(commit=commit, repo=self.repo).analyze()
+				if analyzer.is_bug_commit():
+					ans.append((bug_issue, analyzer.commit.hexsha, analyzer.get_test_paths()))
+				else:
 					logging.info(
 						'Didn\'t associate ' + bug_issue.key + ' and commit ' + commit.hexsha + ' with any test')
-					continue
-				ans.append((bug_issue, commit.hexsha, issue_tests))
+					ans.append((bug_issue, commit.hexsha, []))
 		return ans
 
 	# Returns the commits relevant to bug_issue
@@ -55,37 +60,16 @@ class JiraExtractor(Extractor):
 		else:
 			return False
 
-	# Returns tests that have been changed in the commit in the current state of the project
-	def get_tests_paths_from_commit(self, commit):
-		ans = []
-		diff_index = commit.parents[0].diff(commit)
-		for file in commit.stats.files.keys():
-			if is_test_file(file):
-				try:
-					diff = list(filter(lambda d: d.a_path == file, diff_index))[0]
-				except IndexError as e:
-					logging.info('No diff for ' + file + ' in commit ' + commit.hexsha)
-					return ans
-				if not diff.deleted_file:
-					ans.append(os.path.join(self.repo.working_dir, file))
-		return ans
-
 	def get_bug_issues(self):
-		FIND_BUGS_JQL_QUERY = self.generate_jql_find_bugs()
-		# 	'project = {} AND issuetype = Bug AND createdDate <= "2018/10/03" ORDER BY  createdDate ASC'.format(self.jira_proj_name)
-		# if self.issue_key != None:
-		# 	FIND_BUGS_JQL_QUERY = '''\
-		# 	issuekey = {} AND \
-		# 	'''.format(self.issue_key) + FIND_BUGS_JQL_QUERY
 		try:
-			return self.jira.search_issues(FIND_BUGS_JQL_QUERY, maxResults=JiraExtractor.MAX_ISSUES_TO_RETRIEVE)
+			return self.jira.search_issues(self.query, maxResults=JiraExtractor.MAX_ISSUES_TO_RETRIEVE)
 		except jira_exceptions.JIRAError as e:
 			raise JiraErrorWrapper(msg=e.text, jira_error=e)
 
 	def generate_jql_find_bugs(self):
 		ans = 'project = {} ' \
 		      'AND issuetype = Bug ' \
-		      'AND createdDate <= "2018/10/03" ' \
+		      'AND createdDate <= "2019/10/03" ' \
 		      'ORDER BY  createdDate ASC' \
 			.format(
 			self.jira_proj_name)

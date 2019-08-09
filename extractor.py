@@ -1,32 +1,32 @@
+import datetime
 import logging
+import multiprocessing
 import os
 
+from git import Repo
+from termcolor import colored
 from utils import is_test_file
 
 
 class Extractor(object):
 
-	def __init__(self, repo, inspected_branch):
-		self.repo = repo
+	def __init__(self, repo_dir, inspected_branch):
+		self.repo = Repo(repo_dir)
 		self.inspected_branch = inspected_branch
+		self.manager = multiprocessing.Manager()
 
 	# Returns tupls of (issue,commit,tests) that may contain bugs
 	def extract_possible_bugs(self):
 		ans = []
-		for bug_issue in bug_issues:
-			logging.info("extract_possible_bugs(): working on issue " + bug_issue.key)
-			issue_commits = self.get_issue_commits(bug_issue)
-			if len(issue_commits) == 0:
-				logging.info('Couldn\'t find commits associated with ' + bug_issue.key)
-				continue
-			for commit in issue_commits:
-				issue_tests = self.get_tests_paths_from_commit(commit)
-				if len(issue_tests) == 0:
-					logging.info(
-						'Didn\'t associate ' + bug_issue.key + ' and commit ' + commit.hexsha + ' with any test')
-					continue
-				ans.append((bug_issue.key, commit.hexsha, issue_tests))
-		return ans
+		for hey in self.get_all_commits():
+
+			print(colored('### START HANDLING ###', 'red') + hey.hexsha + ' ' + str(datetime.datetime.now().time()))
+			if self.is_bug_fix_commit(hey):
+				ans.append(hey)
+				print(colored('### APPENDED !###', 'blue'))
+			print(colored('### END HANDLING ###', 'green') + hey.hexsha + ' ' + str(datetime.datetime.now().time()))
+
+		x = 1
 
 	# Returns the commits relevant to bug_issue
 	def get_issue_commits(self, issue):
@@ -47,20 +47,7 @@ class Extractor(object):
 		else:
 			return False
 
-	# Returns tests that have been changed in the commit in the current state of the project
-	def get_tests_paths_from_commit(self, commit):
-		ans = []
-		diff_index = commit.parents[0].diff(commit)
-		for file in commit.stats.files.keys():
-			if is_test_file(file):
-				try:
-					diff = list(filter(lambda d: d.a_path == file, diff_index))[0]
-				except IndexError as e:
-					logging.info('No diff for ' + file + ' in commit ' + commit.hexsha)
-					return ans
-				if not diff.deleted_file:
-					ans.append(os.path.join(self.repo.working_dir, file))
-		return ans
-
 	def get_all_commits(self):
 		return list(self.repo.iter_commits(self.inspected_branch))
+
+
