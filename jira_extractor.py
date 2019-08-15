@@ -39,7 +39,6 @@ class JiraExtractor(Extractor):
 				else:
 					logging.info(
 						'Didn\'t associate ' + bug_issue.key + ' and commit ' + commit.hexsha + ' with any test')
-					ans.append((bug_issue, commit.hexsha, []))
 		return ans
 
 	# Returns the commits relevant to bug_issue

@@ -1,11 +1,10 @@
 import datetime
-import logging
 import multiprocessing
-import os
 
 from git import Repo
+# from jira_extractor import JiraExtractor
+# from sourceforge_extractor import SourceforgeExtractor
 from termcolor import colored
-from utils import is_test_file
 
 
 class Extractor(object):

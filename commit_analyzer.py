@@ -14,11 +14,12 @@ class IsBugCommitAnalyzer(object):
 		return self._commit
 
 	def analyze(self):
+		if len(self.commit.parents) == 0: return self
 		self.associated_tests_paths = self.get_tests_paths_from_commit()
 		return self
 
 	def is_bug_commit(self):
-		return self.associated_tests_paths != None
+		return self.associated_tests_paths != None and len(self.associated_tests_paths) > 0
 
 	def get_test_paths(self):
 		return self.associated_tests_paths
@@ -42,6 +43,8 @@ class IsBugCommitAnalyzer(object):
 		if not name.endswith('.java'):
 			return False
 		if name.endswith('test.java'):
+			return True
+		if name.endswith('tests.java'):
 			return True
 		if name.startswith('test'):
 			return True
