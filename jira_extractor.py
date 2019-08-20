@@ -48,6 +48,9 @@ class JiraExtractor(Extractor):
 			self.get_all_commits()
 		)
 
+	def get_tests_paths_from_commit(self, commit):
+		return IsBugCommitAnalyzer(commit=commit, repo=self.repo).analyze().get_test_paths()
+
 	# Returns true if the commit message contains the issue key exclusively
 	def is_associated_to_commit(self, issue, commit):
 		if issue.key in commit.message:
