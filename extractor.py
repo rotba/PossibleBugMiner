@@ -1,18 +1,34 @@
 import datetime
 import multiprocessing
+import os
 
 from git import Repo
-# from jira_extractor import JiraExtractor
+#from jira_extractor import JiraExtractor
 # from sourceforge_extractor import SourceforgeExtractor
 from termcolor import colored
+from utils import get_from_cache
 
+CACHE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)),'cache')
 
 class Extractor(object):
+	EARLIEST_BUG = 0
 
 	def __init__(self, repo_dir, inspected_branch):
 		self.repo = Repo(repo_dir)
 		self.inspected_branch = inspected_branch
 		self.manager = multiprocessing.Manager()
+		self.cache_dir = os.path.join(CACHE_DIR, os.path.basename(self.repo.working_dir))
+		if not os.path.isdir(self.cache_dir):
+			os.makedirs(self.cache_dir)
+
+
+	def extract_possible_bugs_wrapper(self, use_cache):
+		if use_cache:
+			return filter(lambda x: self.bugs_filter(x),
+			              get_from_cache(os.path.join(self.cache_dir, 'possible_bugs.pkl'),
+			                             lambda: self.extract_possible_bugs()))
+		else:
+			return self.extract_possible_bugs()
 
 	# Returns tupls of (issue,commit,tests) that may contain bugs
 	def extract_possible_bugs(self):
@@ -48,5 +64,14 @@ class Extractor(object):
 
 	def get_all_commits(self):
 		return list(self.repo.iter_commits(self.inspected_branch))
+
+	# Returns boolean. Filter the bugs to inspect
+	def bugs_filter(self, possible_bug):
+		if Extractor.EARLIEST_BUG > 0:
+			key = possible_bug[0]
+			number = int(key.split('-')[1])
+			return number >= EARLIEST_BUG
+		return True
+
 
 

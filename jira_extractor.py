@@ -1,18 +1,17 @@
 import logging
 import os
+import re
 from urlparse import urlparse
 
 from commit_analyzer import IsBugCommitAnalyzer
+from extractor import Extractor
 from jira import JIRA
 from jira import exceptions as jira_exceptions
-
-from extractor import Extractor
-from utils import is_test_file
+from utils import get_from_cache
 
 
 class JiraExtractor(Extractor):
-	MAX_ISSUES_TO_RETRIEVE = 2000
-	# USE_CASH = False
+	MAX_ISSUES_TO_RETRIEVE = 500
 
 	# def __init__(self, repo_dir, branch_inspected, jira_url, issue_key=None, query = None, use_cash = False):
 	def __init__(self, repo_dir, branch_inspected, jira_url, issue_key=None, query=None):
@@ -59,6 +58,10 @@ class JiraExtractor(Extractor):
 				return True
 			char_after_issue_key = commit.message[commit.message.find(issue.key) + len(issue.key)]
 			return not char_after_issue_key.isdigit()
+		elif re.search("This closes #{}".format(issue.key), commit.message):
+			return True
+		elif re.search("\[{}\]".format(issue.key), commit.message):
+			return True
 		else:
 			return False
 
@@ -71,14 +74,17 @@ class JiraExtractor(Extractor):
 	def generate_jql_find_bugs(self):
 		ans = 'project = {} ' \
 		      'AND issuetype = Bug ' \
-		      'AND createdDate <= "2019/10/03" ' \
-		      'ORDER BY  createdDate ASC' \
+		      'AND createdDate <= "2018/10/03" ' \
+		      'ORDER BY  createdDate DESC' \
 			.format(
 			self.jira_proj_name)
 		if self.issue_key != None:
 			ans = 'issuekey = {} AND ' \
 				      .format(self.issue_key) + ans
 		return ans
+
+	def get_tests_paths_from_commit(self, commit):
+		return IsBugCommitAnalyzer(commit=commit, repo=self.repo).analyze().get_test_paths()
 
 
 class JiraExtractorException(Exception):
