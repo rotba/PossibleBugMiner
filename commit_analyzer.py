@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import os
 
 
@@ -47,5 +48,7 @@ class IsBugCommitAnalyzer(object):
 		if name.endswith('tests.java'):
 			return True
 		if name.startswith('test'):
+			return True
+		if 'test' in os.path.basename(file).lower() and 'test' in Path(file).parts:
 			return True
 		return False
