@@ -20,21 +20,22 @@ class SourceforgeExtractor(Extractor):
 	def extract_possible_bugs(self):
 		ans = []
 		for commit in self.get_all_commits():
-			logging.info(colored('### START HANDLING ###', 'red') + commit.hexsha + ' ' + str(datetime.datetime.now().time()))
-			analyzer = SourcforgeCommitAnalyzer(commit=commit, repo=self.repo).analyze()
+			if not self.has_parent(commit): continue
+			logging.info(
+				colored('### START HANDLING ###', 'red') + commit.hexsha + ' ' + str(datetime.datetime.now().time()))
+			analyzer = SourcforgeCommitAnalyzer(commit=commit, parent=self.get_parent(commit), repo=self.repo).analyze()
 			if analyzer.is_bug_commit():
-				ans.append((analyzer.get_issue(), analyzer.commit.hexsha, analyzer.get_test_paths()))
+				ans.append((analyzer.get_issue(), analyzer.commit.hexsha, analyzer.get_test_paths(), analyzer.get_diffed_components()))
 				logging.info(colored('### APPENDED !###', 'blue'))
-			logging.info(colored('### END HANDLING ###', 'green') + commit.hexsha + ' ' + str(datetime.datetime.now().time()))
+			logging.info(
+				colored('### END HANDLING ###', 'green') + commit.hexsha + ' ' + str(datetime.datetime.now().time()))
 		return ans
-
-
 
 
 class SourcforgeCommitAnalyzer(IsBugCommitAnalyzer):
 
-	def __init__(self, commit, repo):
-		super(SourcforgeCommitAnalyzer, self).__init__(commit, repo)
+	def __init__(self, commit, parent, repo):
+		super(SourcforgeCommitAnalyzer, self).__init__(commit, parent, repo)
 		self._bug_number = None
 
 	def analyze(self):

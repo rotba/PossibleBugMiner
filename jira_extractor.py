@@ -11,7 +11,7 @@ from utils import get_from_cache
 
 
 class JiraExtractor(Extractor):
-	MAX_ISSUES_TO_RETRIEVE = 500
+	MAX_ISSUES_TO_RETRIEVE = 1000
 
 	# def __init__(self, repo_dir, branch_inspected, jira_url, issue_key=None, query = None, use_cash = False):
 	def __init__(self, repo_dir, branch_inspected, jira_url, issue_key=None, query=None):
@@ -32,9 +32,10 @@ class JiraExtractor(Extractor):
 				logging.info('Couldn\'t find commits associated with ' + bug_issue.key)
 				continue
 			for commit in issue_commits:
-				analyzer = IsBugCommitAnalyzer(commit=commit, repo=self.repo).analyze()
+				if not self.has_parent(commit): continue
+				analyzer = IsBugCommitAnalyzer(commit=commit, parent=self.get_parent(commit), repo=self.repo).analyze()
 				if analyzer.is_bug_commit():
-					ans.append((bug_issue, analyzer.commit.hexsha, analyzer.get_test_paths()))
+					ans.append((bug_issue, analyzer.commit.hexsha, analyzer.get_test_paths(), analyzer.get_diffed_components()))
 				else:
 					logging.info(
 						'Didn\'t associate ' + bug_issue.key + ' and commit ' + commit.hexsha + ' with any test')
@@ -71,17 +72,14 @@ class JiraExtractor(Extractor):
 	def generate_jql_find_bugs(self):
 		ans = 'project = {} ' \
 		      'AND issuetype = Bug ' \
-		      'AND createdDate <= "2018/10/03" ' \
-		      'ORDER BY  createdDate DESC' \
+		      'AND createdDate <= "2019/10/03" ' \
+		      'ORDER BY  createdDate ASC' \
 			.format(
 			self.jira_proj_name)
 		if self.issue_key != None:
 			ans = 'issuekey = {} AND ' \
 				      .format(self.issue_key) + ans
 		return ans
-
-	def get_tests_paths_from_commit(self, commit):
-		return IsBugCommitAnalyzer(commit=commit, repo=self.repo).analyze().get_test_paths()
 
 
 class JiraExtractorException(Exception):
