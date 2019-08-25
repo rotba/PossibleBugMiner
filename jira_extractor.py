@@ -51,6 +51,8 @@ class JiraExtractor(Extractor):
 	# Returns true if the commit message contains the issue key exclusively
 	def is_associated_to_commit(self, issue, commit):
 		if issue.key in commit.message:
+			if 'fix' in commit.message.lower():
+				return True
 			index_of_char_after_issue_key = commit.message.find(issue.key) + len(issue.key)
 			if index_of_char_after_issue_key == len(commit.message):
 				return True
