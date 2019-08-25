@@ -75,14 +75,13 @@ class IsBugCommitAnalyzer(object):
 
     def get_diffed_components(self):
         ans = []
-        commit_diff = commitsdiff.CommitsDiff(
-            commit_a=Commit.init_commit_by_git_commit(self.parent, 0),
-            commit_b=Commit.init_commit_by_git_commit(self.commit, 0))
+        try:
+            commit_diff = commitsdiff.CommitsDiff(
+                commit_a=Commit.init_commit_by_git_commit(self.parent, 0),
+                commit_b=Commit.init_commit_by_git_commit(self.commit, 0))
+        except AssertionError as e:
+            return []
         for file_diff in commit_diff.diffs:
             if file_diff.file_name.endswith('.java') and not self.is_test_file(file_diff.file_name):
-                file_path = os.path.join(self._repo.working_tree_dir, file_diff.file_name)
-                ans += list(
-                    map(lambda m: mvn.generate_mvn_class_names(src_path=file_path) + '#' + m,
-                        file_diff.changed_methods)
-                )
+                ans.append(file_diff)
         return ans
