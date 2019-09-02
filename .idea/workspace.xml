@@ -2,14 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="356be9c7-7828-4b47-9c0e-0d26f34ce769" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/PossibleBugMiner.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/PossibleBugMiner.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/commit_analyzer.py" beforeDir="false" afterPath="$PROJECT_DIR$/commit_analyzer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/extractor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/jira_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/jira_extractor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sourceforge_extractor.py" beforeDir="false" afterPath="$PROJECT_DIR$/sourceforge_extractor.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -173,6 +167,7 @@
       <workItem from="1565438094524" duration="234000" />
       <workItem from="1566378577614" duration="2219000" />
       <workItem from="1566389587480" duration="4568000" />
+      <workItem from="1566920562162" duration="762000" />
     </task>
     <servers />
   </component>
