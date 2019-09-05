@@ -3,6 +3,7 @@ import os
 import re
 from urlparse import urlparse
 
+import settings
 from commit_analyzer import IsBugCommitAnalyzer
 from extractor import Extractor
 from jira import JIRA
@@ -51,6 +52,9 @@ class JiraExtractor(Extractor):
 
 	# Returns true if the commit message contains the issue key exclusively
 	def is_associated_to_commit(self, issue, commit):
+		if settings.DEBUG:
+			if commit.hexsha == 'af6fe141036d30bfd1613758b7a9fb413bf2bafc':
+				return True
 		if issue.key in commit.message:
 			if JiraExtractor.WEAK_ISSUE_COMMIT_BINDING:
 				if 'fix' in commit.message.lower():

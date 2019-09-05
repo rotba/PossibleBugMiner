@@ -1,5 +1,5 @@
 import logging
-
+import settings
 from aidnd_diff import commitsdiff
 from aidnd_diff.commit import Commit
 from mvnpy import mvn
@@ -32,6 +32,9 @@ class IsBugCommitAnalyzer(object):
         return self
 
     def is_bug_commit(self):
+        if settings.DEBUG:
+            if self.commit.hexsha == 'af6fe141036d30bfd1613758b7a9fb413bf2bafc':
+                return True
         return self.has_associated_tests_paths() and self.has_associated_diffed_components()
 
     def get_test_paths(self):
