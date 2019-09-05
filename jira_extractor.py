@@ -12,7 +12,7 @@ from utils import get_from_cache
 
 
 class JiraExtractor(Extractor):
-	MAX_ISSUES_TO_RETRIEVE = 30
+	MAX_ISSUES_TO_RETRIEVE = 1000
 	WEAK_ISSUE_COMMIT_BINDING = False
 
 	# def __init__(self, repo_dir, branch_inspected, jira_url, issue_key=None, query = None, use_cash = False):
