@@ -8,7 +8,7 @@ import os
 
 
 class IsBugCommitAnalyzer(object):
-    TESTS_DIFFS_IS_CRITERIA = True
+    TESTS_DIFFS_IS_CRITERIA = False
 
     def __init__(self, commit, parent, repo):
         self._commit = commit
