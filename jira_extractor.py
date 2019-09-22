@@ -4,11 +4,11 @@ import re
 from urlparse import urlparse
 
 import settings
+from candidate import Candidate
 from commit_analyzer import IsBugCommitAnalyzer
 from extractor import Extractor
 from jira import JIRA
 from jira import exceptions as jira_exceptions
-from utils import get_from_cache
 
 
 class JiraExtractor(Extractor):
@@ -37,7 +37,8 @@ class JiraExtractor(Extractor):
 				if not self.has_parent(commit): continue
 				analyzer = IsBugCommitAnalyzer(commit=commit, parent=self.get_parent(commit), repo=self.repo).analyze()
 				if analyzer.is_bug_commit():
-					ans.append((bug_issue, analyzer.commit.hexsha, analyzer.get_test_paths(), analyzer.get_diffed_components()))
+					ans.append(Candidate(issue = bug_issue, fix_commit = analyzer.commit.hexsha, tests = analyzer.get_test_paths() , diffed_components= analyzer.get_diffed_components()))
+					# ans.append((bug_issue, analyzer.commit.hexsha, analyzer.get_test_paths(), analyzer.get_diffed_components()))
 				else:
 					logging.info(
 						'Didn\'t associate ' + bug_issue.key + ' and commit ' + commit.hexsha + ' with any test')
