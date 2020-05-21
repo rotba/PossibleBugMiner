@@ -1,11 +1,11 @@
 import logging
 import settings
-from aidnd_diff import commitsdiff
-from aidnd_diff.commit import Commit
+from diff.CommitsDiff import CommitsDiff
 from mvnpy import mvn
 from pathlib import Path
 import os
-
+from javadiff.diff import get_changed_exists_methods, get_changed_methods
+from diff.CommitsDiff import CommitsDiff
 
 class IsBugCommitAnalyzer(object):
     TESTS_DIFFS_IS_CRITERIA = False
@@ -16,6 +16,8 @@ class IsBugCommitAnalyzer(object):
         self._repo = repo
         self.associated_tests_paths = None
         self.diffed_components = None
+        self.changed_exists_methods = None
+        self.changed_methods = None
 
     @property
     def commit(self):
@@ -29,16 +31,28 @@ class IsBugCommitAnalyzer(object):
         if len(self.commit.parents) == 0: return self
         self.associated_tests_paths = self.get_tests_paths_from_commit()
         self.diffed_components = self.get_diffed_components()
+        self.changed_exists_methods = get_changed_exists_methods(self._repo.working_dir, self._commit)
+        self.changed_methods = get_changed_methods(self._repo.working_dir, self._commit)
         return self
 
-    def is_bug_commit(self):
+    def is_bug_commit(self, check_trace=False):
         if settings.DEBUG:
             if self.commit.hexsha == 'af6fe141036d30bfd1613758b7a9fb413bf2bafc':
                 return True
-        return self.has_associated_tests_paths() and self.has_associated_diffed_components()
+        check = self.has_associated_tests_paths() and self.has_associated_diffed_components() and not self.has_added_methods()
+        if check and check_trace:
+            from mvnpy.Repo import Repo
+            repo = Repo(self._repo)
+            if repo.has_surefire():
+                return True
+        return False
 
     def get_test_paths(self):
         return self.associated_tests_paths
+
+    def has_added_methods(self):
+        # check of there are new non-test methods
+        return len(filter(lambda m: "test" not in m.id.lower() and m not in self.changed_exists_methods, self.changed_methods)) > 0
 
     def get_tests_paths_from_commit(self):
         ans = []
@@ -79,9 +93,9 @@ class IsBugCommitAnalyzer(object):
     def get_diffed_components(self):
         ans = []
         try:
-            commit_diff = commitsdiff.CommitsDiff(
-                commit_a=Commit.init_commit_by_git_commit(self.parent, 0),
-                commit_b=Commit.init_commit_by_git_commit(self.commit, 0))
+            commit_diff = CommitsDiff(
+                commit_a=self.commit,
+                commit_b=self.parent)
         except AssertionError as e:
             return []
         for file_diff in commit_diff.diffs:

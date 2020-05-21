@@ -1,7 +1,5 @@
 import logging
 import settings
-from aidnd_diff import commitsdiff
-from aidnd_diff.commit import Commit
 from mvnpy import mvn
 from pathlib import Path
 import os
