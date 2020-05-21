@@ -2,7 +2,7 @@ import datetime
 import logging
 import re
 
-from diff.FileDiff import FileDiff
+from javadiff.FileDiff import FileDiff
 from commit_analyzer import IsBugCommitAnalyzer
 from extractor import Extractor
 from termcolor import colored

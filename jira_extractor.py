@@ -73,7 +73,7 @@ class JiraExtractor(Extractor):
 		return issues_d
 
 	# Returns tupls of (issue,commit,tests) that may contain bugs
-	def extract_possible_bugs(self):
+	def extract_possible_bugs(self, check_trace=False):
 		ans = []
 		for bug_issue in self.issues_d:
 			logging.info("extract_possible_bugs(): working on issue " + bug_issue)
@@ -85,9 +85,8 @@ class JiraExtractor(Extractor):
 				if not self.has_parent(commit):
 					continue
 				analyzer = IsBugCommitAnalyzer(commit=commit, parent=self.get_parent(commit), repo=self.repo).analyze()
-				if analyzer.is_bug_commit():
+				if analyzer.is_bug_commit(check_trace):
 					yield Candidate(issue=bug_issue, fix_commit=analyzer.commit.hexsha, tests=analyzer.get_test_paths(), diffed_components=analyzer.get_diffed_components())
-					# ans.append((bug_issue, analyzer.commit.hexsha, analyzer.get_test_paths(), analyzer.get_diffed_components()))
 				else:
 					logging.info(
 						'Didn\'t associate ' + bug_issue + ' and commit ' + commit.hexsha + ' with any test')

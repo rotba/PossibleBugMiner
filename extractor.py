@@ -23,16 +23,16 @@ class Extractor(object):
 		if not os.path.isdir(self.cache_dir):
 			os.makedirs(self.cache_dir)
 
-	def extract_possible_bugs_wrapper(self, use_cache):
+	def extract_possible_bugs_wrapper(self, use_cache, check_trace=False):
 		if use_cache:
 			return filter(lambda x: self.bugs_filter(x),
 			              get_from_cache(os.path.join(self.cache_dir, 'possible_bugs.pkl'),
 			                             lambda: self.extract_possible_bugs()))
 		else:
-			return self.extract_possible_bugs()
+			return self.extract_possible_bugs(check_trace=check_trace)
 
 	# Returns tupls of (issue,commit,tests) that may contain bugs
-	def extract_possible_bugs(self):
+	def extract_possible_bugs(self, **kwargs):
 		ans = []
 		for hey in self.get_all_commits():
 
